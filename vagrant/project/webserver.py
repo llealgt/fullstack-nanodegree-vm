@@ -52,7 +52,7 @@ class webserverHandler(BaseHTTPRequestHandler):
 				for restaurant in restaurants:
 					output+=restaurant.name+"<br>"
 					output+='<a href="/restaurants/'+str(restaurant.id)+'/edit">Edit</a><br>'
-					output+= '<a href="#">Delete</a><br>'
+					output+= '<a href="/restaurants/'+str(restaurant.id)+'/delete">Delete</a><br>'
 					output += '<br>'
 					
 				output += "</body></html>"
@@ -101,6 +101,29 @@ class webserverHandler(BaseHTTPRequestHandler):
 					print(output)
 					self.wfile.write(output)
 					
+					return
+					
+				
+			if self.path.endswith("/delete"):
+				restaurant_id = self.path.split("/")[2]
+				restaurant = session.query(Restaurant).filter_by(id = restaurant_id).one()
+					
+				if restaurant:
+					self.send_response(200)
+					self.send_header("Content-type","text/html")
+					self.end_headers()
+						
+					output = "<html><body><h1>"
+					output += restaurant.name
+					output += "</h1>"
+					output += "<form method = 'POST' enctype = 'multipart/form-data' action = '/restaurants/"+restaurant_id +"/delete'>"
+					output += "<input type = 'submit' value = 'Delete'>"
+					output += "</form>"
+						
+					output += "</body></html>"
+							
+					print(output)
+					self.wfile.write(output)
 				
 				
 		except IOError:
@@ -144,6 +167,21 @@ class webserverHandler(BaseHTTPRequestHandler):
 						self.send_response(301)
 						self.send_header('Location','/restaurants')
 						self.end_headers()
+						
+			if self.path.endswith("/delete"):
+				restaurant_id = self.path.split("/")[2]
+				restaurant = session.query(Restaurant).filter_by(id = restaurant_id).one()
+				
+				if restaurant:
+					session.delete(restaurant)	
+					session.commit()
+				
+				self.send_response(301)
+				self.send_header('Content-type','text/htlm')
+				self.send_header('Location','/restaurants')
+				self.end_headers()
+					
+					
 						
 		
 		except Exception as e:
